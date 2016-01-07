@@ -81,6 +81,8 @@ class SitemapGenerator(object):
             'pages': 0.5
         }
 
+        self.exclude = []
+
         config = settings.get('SITEMAP', {})
 
         if not isinstance(config, dict):
@@ -89,6 +91,7 @@ class SitemapGenerator(object):
             fmt = config.get('format')
             pris = config.get('priorities')
             chfreqs = config.get('changefreqs')
+            self.exclude = config.get('exclude')
 
             if fmt not in ('xml', 'txt'):
                 warning("sitemap plugin: SITEMAP['format'] must be `txt' or `xml'")
@@ -161,15 +164,13 @@ class SitemapGenerator(object):
             chfreq = self.changefreqs['indexes']
 
         pageurl = '' if page.url == 'index.html' else page.url
-        
-        #Exclude URLs from the sitemap:
-        sitemapExclude = []
 
-        if self.format == 'xml':
-            if pageurl not in sitemapExclude:
+        # Only process if URL is not excluded
+        if pageurl not in self.exclude:
+            if self.format == 'xml':
                 fd.write(XML_URL.format(self.siteurl, pageurl, lastmod, chfreq, pri))
-        else:
-            fd.write(self.siteurl + '/' + pageurl + '\n')
+            else:
+                fd.write(self.siteurl + '/' + pageurl + '\n')
 
     def get_date_modified(self, page, default):
         if hasattr(page, 'modified'):
